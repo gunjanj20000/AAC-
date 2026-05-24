@@ -1,0 +1,48 @@
+{
+  "name": "Bilingual AAC Board - English & Hindi",
+  "short_name": "Bilingual AAC",
+  "description": "A bilingual AAC (Augmentative and Alternative Communication) board in English and Hindi for kids to speak daily words and construct sentences.",
+  "categories": ["education", "medical", "utilities"],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8F2",
+  "theme_color": "#FF8B3D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Build Sentences",
+      "short_name": "Sentences",
+      "description": "Speak customized sentence sequences easily",
+      "url": "/?shortcut=sentences",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Parent Room",
+      "short_name": "Parents",
+      "description": "Open parent configuration panel",
+      "url": "/?shortcut=parents",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

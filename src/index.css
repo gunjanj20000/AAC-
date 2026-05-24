@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Fredoka", system-ui, sans-serif;
+  --font-hindi: "Noto Sans Devanagari", "Baloo 2", system-ui, sans-serif;
+}
+
+/* Vibrant Palette custom effects */
+.card-shadow {
+  box-shadow: 0 6px 0 var(--shadow-color, #cbd5e1);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.card-shadow:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--shadow-color, #cbd5e1);
+}
+
+.category-active {
+  background-color: #FF8B3D !important;
+  color: white !important;
+  border-color: #FF8B3D !important;
+  box-shadow: 0 4px 0 #D16D29 !important;
+}
+
+/* Custom scrollbar for clean visual aesthetic, especially in touch grids and list views */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fcfbf5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffde59;
+  border-radius: 9999px;
+  border: 2px solid #fcfbf5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff8b3d;
+}
+
+/* Prevent accidental text selections for autistic toddlers who might tap rapidly */
+.select-none {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F8FAF5;
+  color: #2d3748;
+  overflow-x: hidden;
+}

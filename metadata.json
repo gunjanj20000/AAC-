@@ -1,0 +1,6 @@
+{
+  "name": "Bilingual AAC Board",
+  "description": "A bilingual AAC (Augmentative and Alternative Communication) board in English and Hindi designed for nonverbal and autistic children to communicate their daily needs.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
