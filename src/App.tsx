@@ -159,7 +159,7 @@ export default function App() {
 
     // 3. Initialise Language Mode
     const cachedLang = localStorage.getItem('aac_language_mode');
-    if (cachedLang) {
+    if (cachedLang && cachedLang !== 'both') {
       setLanguageMode(cachedLang as LanguageMode);
     } else {
       setLanguageMode('hindi');
@@ -379,23 +379,12 @@ export default function App() {
           {/* Core Navigation, Language Toggle Control */}
           <div className="flex items-center gap-2 md:gap-3">
             
-            {/* Language switch grid */}
-            <div className="bg-slate-100 p-1 rounded-2xl flex gap-0.5 border border-slate-200 shadow-inner">
-              <button
-                id="lang-both-btn"
-                onClick={() => handleLanguageChange('both')}
-                className={`px-3.5 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                  languageMode === 'both'
-                    ? 'bg-[#FF8B3D] text-white shadow-xs border-b border-[#D16D29]'
-                    : 'text-slate-600 hover:bg-slate-150'
-                }`}
-              >
-                🌍 Both
-              </button>
+            {/* Language switch toggle (English vs. Hindi) */}
+            <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200 shadow-inner">
               <button
                 id="lang-eng-btn"
                 onClick={() => handleLanguageChange('english')}
-                className={`px-3.5 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                className={`px-4 py-1.5 text-xs font-black rounded-xl transition-all cursor-pointer min-w-[70px] text-center ${
                   languageMode === 'english'
                     ? 'bg-sky-500 text-white shadow-xs border-b border-sky-600'
                     : 'text-slate-600 hover:bg-slate-150'
@@ -406,8 +395,8 @@ export default function App() {
               <button
                 id="lang-hin-btn"
                 onClick={() => handleLanguageChange('hindi')}
-                className={`px-3.5 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                  languageMode === 'hindi'
+                className={`px-4 py-1.5 text-xs font-black font-hindi rounded-xl transition-all cursor-pointer min-w-[70px] text-center ${
+                  languageMode !== 'english'
                     ? 'bg-emerald-500 text-white shadow-xs border-b border-emerald-600'
                     : 'text-slate-600 hover:bg-slate-150'
                 }`}
