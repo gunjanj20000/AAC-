@@ -8,6 +8,7 @@ import {
   Mic, Square, Play
 } from 'lucide-react';
 import { getAvailableVoices, stopSpeech, speakText, playCustomAudio } from '../utils/speech';
+import { triggerHapticFeedback } from '../utils/audioEffects';
 
 interface ParentModalProps {
   isOpen: boolean;
@@ -88,6 +89,10 @@ export function ParentModal({
   const [voiceSpeed, setVoiceSpeed] = useState(voiceSettings.speed);
   const [voicePitch, setVoicePitch] = useState(voiceSettings.pitch);
   const [voiceVolume, setVoiceVolume] = useState(typeof voiceSettings.volume === 'number' ? voiceSettings.volume : 1.0);
+
+  // Haptic Sensory States
+  const [hapticEnabled, setHapticEnabled] = useState(voiceSettings.hapticEnabled !== false);
+  const [hapticPattern, setHapticPattern] = useState<'soft' | 'normal' | 'heavy' | 'double'>(voiceSettings.hapticPattern || 'normal');
 
   // Active Card Editing State
   const [editingCard, setEditingCard] = useState<AACCard | null>(null);
@@ -360,20 +365,72 @@ export function ParentModal({
     setFormError('');
   };
 
+  // Helper to compress an uploaded image client-side to keep base64 storage under 60-80kb
+  const compressImage = (file: File, maxWidth = 320, maxHeight = 320, quality = 0.75): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          // Scale dimensions to hold aspect ratio within maxWidth / maxHeight bounds
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not request canvas 2D context'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => {
+          reject(new Error('Selected file could not be decoded as an image.'));
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => {
+        reject(new Error('Could not read the uploaded image file.'));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 512000) {
-        setFormError('Image is too large! Please choose an image smaller than 500KB.');
+      if (file.size > 2097152) {
+        setFormError('Image is too large! Please choose an image smaller than 2MB.');
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        setEditCustomImage(reader.result as string);
-        setEditEmoji(''); // Clear default emoji if custom image uploaded
-        setFormError('');
-      };
-      reader.readAsDataURL(file);
+      setFormError('');
+      compressImage(file)
+        .then((compressedBase64) => {
+          setEditCustomImage(compressedBase64);
+          setEditEmoji(''); // Clear default emoji if custom image uploaded
+          setFormError('');
+        })
+        .catch((err) => {
+          setFormError(err.message || 'Error uploading and compressing image.');
+        });
     }
   };
 
@@ -429,6 +486,8 @@ export function ParentModal({
     setSelectedHinVoice(voiceSettings.hindiVoiceName || '');
     setVoiceSpeed(voiceSettings.speed);
     setVoicePitch(voiceSettings.pitch);
+    setHapticEnabled(voiceSettings.hapticEnabled !== false);
+    setHapticPattern(voiceSettings.hapticPattern || 'normal');
   }, [voiceSettings]);
 
   if (!isOpen) return null;
@@ -437,19 +496,21 @@ export function ParentModal({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size is tiny so we don't blow localstorage pool (under 500KB is safe)
-      if (file.size > 512000) {
-        setFormError('Image is too large! Please choose an image smaller than 500KB.');
+      if (file.size > 2097152) {
+        setFormError('Image is too large! Please choose an image smaller than 2MB.');
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        setCustomImage(reader.result as string);
-        setSelectedEmoji(''); // Clear emoji if custom image is uploaded
-        setFormError('');
-      };
-      reader.readAsDataURL(file);
+      setFormError('');
+      compressImage(file)
+        .then((compressedBase64) => {
+          setCustomImage(compressedBase64);
+          setSelectedEmoji(''); // Clear emoji if custom image is uploaded
+          setFormError('');
+        })
+        .catch((err) => {
+          setFormError(err.message || 'Error uploading and compressing image.');
+        });
     }
   };
 
@@ -530,6 +591,8 @@ export function ParentModal({
       speed: parseFloat(voiceSpeed.toString()),
       pitch: parseFloat(voicePitch.toString()),
       volume: parseFloat(voiceVolume.toString()),
+      hapticEnabled,
+      hapticPattern,
     });
     setSuccessMsg('Voice settings updated!');
     setTimeout(() => setSuccessMsg(''), 3000);
@@ -598,26 +661,27 @@ export function ParentModal({
   };
 
   return (
-    <div id="parent-modal-overlay" className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-45 flex items-center justify-center p-4 select-none">
+    <div id="parent-modal-overlay" className="fixed inset-0 bg-slate-50 z-45 flex flex-col select-none animate-fade-in">
       <div 
         id="parent-modal-dialog" 
-        className="bg-white rounded-3xl w-full max-w-4xl h-[90vh] md:h-[80vh] flex flex-col border-4 border-[#FFDE59] shadow-2xl relative overflow-hidden"
+        className="bg-white w-full h-full flex flex-col relative overflow-hidden"
       >
         {/* Banner */}
-        <div className="bg-[#FDFCF0] p-5 border-b-2 border-[#FFDE59] flex justify-between items-center shrink-0">
+        <div className="bg-[#FDFCF0] px-6 py-4 border-b-2 border-[#FFDE59] flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-3xl">🛠️</span>
             <div>
-              <h2 className="text-2xl font-bold font-sans text-slate-800">Parent & Educator Settings</h2>
-              <p className="text-xs text-slate-500 font-sans mt-0.5">Customize picture symbols, speech speed, accents, and manage vocabulary.</p>
+              <h2 className="text-xl md:text-2xl font-black font-sans text-slate-800">AAC Settings & Customization</h2>
+              <p className="text-xs text-slate-500 font-sans mt-0.5">Customize vocabulary picture cards, categories, speech speeds, and offline sync.</p>
             </div>
           </div>
           <button 
             id="close-parent-modal" 
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-2xl shadow-xs transition-all border border-slate-200"
+            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-2xl shadow-xs transition-all border border-slate-200 font-sans font-black text-sm cursor-pointer"
           >
-            <X className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5 text-slate-600" />
+            <span>Go Back</span>
           </button>
         </div>
 
@@ -1449,7 +1513,7 @@ export function ParentModal({
                 {/* Speech pitch slider */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm font-bold text-slate-700">
-                    <span>Vibration Pitch</span>
+                    <span>Voice Pitch (Tone)</span>
                     <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">{voicePitch}x</span>
                   </div>
                   <input
@@ -1491,6 +1555,73 @@ export function ParentModal({
                     <span>Maximum (100%)</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Tactile Preference & Haptic Feedback */}
+              <div className="bg-emerald-50/45 border border-emerald-100 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5 max-w-[75%]">
+                    <h4 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                      <span>📳</span>
+                      <span>Sensory Tactile Feedback (Haptics)</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Triggers gentle hardware vibrations on mobile devices and tablet screens when picture symbols are tapped, providing confidence and physical confirmation for young learners with sensory processing preferences.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        id="haptic-toggle-switch"
+                        type="checkbox"
+                        checked={hapticEnabled}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          setHapticEnabled(val);
+                          if (val) triggerHapticFeedback('normal');
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
+                </div>
+
+                {hapticEnabled && (
+                  <div className="space-y-3 pt-2 border-t border-emerald-100/60 transition-all">
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      Vibration Intensity & Pacing Patterns
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { key: 'soft', label: '🪶 Soft Tap', desc: 'Mild feather tickle' },
+                        { key: 'normal', label: '🖱️ Regular Click', desc: 'Standard hardware feedback' },
+                        { key: 'heavy', label: '🔨 Solid Press', desc: 'Firm physical knock' },
+                        { key: 'double', label: '✨ Double Sparkle', desc: 'Two quick magic taps' }
+                      ].map((item) => {
+                        const active = hapticPattern === item.key;
+                        return (
+                          <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => {
+                              setHapticPattern(item.key as any);
+                              triggerHapticFeedback(item.key as any);
+                            }}
+                            className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between h-[68px] ${
+                              active
+                                ? 'bg-emerald-500 border-emerald-600 text-white shadow-sm'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            <span className="text-xs font-black block leading-none">{item.label}</span>
+                            <span className={`text-[9px] block leading-tight mt-1 ${active ? 'text-emerald-100' : 'text-slate-400 font-semibold'}`}>{item.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-amber-50/50 border border-amber-200/50 rounded-xl p-3.5 text-xs text-amber-850 flex gap-2 font-medium">

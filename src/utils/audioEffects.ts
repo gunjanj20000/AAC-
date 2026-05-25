@@ -66,3 +66,26 @@ export function playChimeSuccessSound(): void {
     console.warn('Chime audio success failed', err);
   }
 }
+
+// Triggers responsive sensory haptic feedback on mobile devices/tablets
+export function triggerHapticFeedback(style: 'soft' | 'normal' | 'heavy' | 'double' = 'normal'): void {
+  try {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+    if (typeof navigator.vibrate !== 'function') return;
+
+    let pattern: number | number[] = 25;
+    if (style === 'soft') {
+      pattern = 12;
+    } else if (style === 'heavy') {
+      pattern = 55;
+    } else if (style === 'double') {
+      pattern = [12, 35, 12];
+    }
+
+    navigator.vibrate(pattern);
+  } catch (err) {
+    // Fail silently so it never interrupts app performance on desktop/restricted browsers
+    console.debug('Haptic feedback unavailable or blocked', err);
+  }
+}
+

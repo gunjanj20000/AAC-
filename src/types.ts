@@ -29,6 +29,8 @@ export interface VoiceSettings {
   speed: number;          // speech response rate (e.g. 0.8 is great for young users)
   pitch: number;          // e.g. 1.2 is a friendlier, higher child-like pitch
   volume: number;         // volume scale for output (0.0 to 1.0)
+  hapticEnabled?: boolean; // toggle haptic sensory feedback
+  hapticPattern?: 'soft' | 'normal' | 'heavy' | 'double'; // haptic pattern style
 }
 
 export type LanguageMode = 'english' | 'hindi' | 'both';

@@ -7,7 +7,7 @@ import { SentenceBar } from './components/SentenceBar';
 import { ChildLockModal } from './components/ChildLockModal';
 import { ParentModal } from './components/ParentModal';
 import { speakText, stopSpeech, playCustomAudio } from './utils/speech';
-import { playTapBubbleSound, playChimeSuccessSound } from './utils/audioEffects';
+import { playTapBubbleSound, playChimeSuccessSound, triggerHapticFeedback } from './utils/audioEffects';
 import { 
   Settings, Lock, Languages, Sparkles, VolumeX, 
   HelpCircle, Home, LogOut
@@ -67,7 +67,9 @@ export default function App() {
     hindiVoiceName: '',
     speed: 0.8,
     pitch: 1.15,
-    volume: 1.0
+    volume: 1.0,
+    hapticEnabled: true,
+    hapticPattern: 'normal'
   });
 
   // Time based greeting calculation
@@ -186,17 +188,28 @@ export default function App() {
     setLanguageMode(mode);
     localStorage.setItem('aac_language_mode', mode);
     playTapBubbleSound();
+    if (voiceSettings.hapticEnabled !== false) {
+      triggerHapticFeedback('soft');
+    }
   };
 
   const clearSentence = useCallback(() => {
     setSentence([]);
     playTapBubbleSound();
     stopSpeech();
-  }, []);
+    if (voiceSettings.hapticEnabled !== false) {
+      triggerHapticFeedback('double');
+    }
+  }, [voiceSettings]);
 
   const handleCardTap = useCallback((card: AACCard) => {
     // Play sensory sound click first for responsive UI feedback
     playTapBubbleSound();
+
+    // Trigger tactile haptic confirmation if enabled for sensory preferences
+    if (voiceSettings.hapticEnabled !== false) {
+      triggerHapticFeedback(voiceSettings.hapticPattern || 'normal');
+    }
 
     if (parentMode) {
       // In parent mode, speak the card or toggle. Let's make it speak so parents can check translations!
@@ -330,7 +343,7 @@ export default function App() {
       setLanguageMode('hindi');
       localStorage.setItem('aac_language_mode', 'hindi');
       
-      const resetVoice = { englishVoiceName: '', hindiVoiceName: '', speed: 0.8, pitch: 1.15, volume: 1.0 };
+      const resetVoice: VoiceSettings = { englishVoiceName: '', hindiVoiceName: '', speed: 0.8, pitch: 1.15, volume: 1.0, hapticEnabled: true, hapticPattern: 'normal' };
       setVoiceSettings(resetVoice);
       localStorage.setItem('aac_voice_settings', JSON.stringify(resetVoice));
 
@@ -417,18 +430,7 @@ export default function App() {
               </button>
             )}
 
-            {/* Quick Stop Voice Button */}
-            <button
-              id="stop-audio-btn"
-              onClick={() => {
-                stopSpeech();
-                playTapBubbleSound();
-              }}
-              className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl transition-all transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
-              title="Stop Speaking"
-            >
-              <VolumeX className="w-5 h-5" />
-            </button>
+
 
             {/* Settings Parent Panel Gear */}
             {!parentMode ? (
