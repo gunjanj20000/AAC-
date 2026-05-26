@@ -13,6 +13,7 @@ export interface AACCard {
   isCustom?: boolean;     // track user-created card
   isVisible: boolean;     // optionally hidden by parent
   createdAt?: number;
+  usageCount?: number;
 }
 
 export interface Category {

@@ -4,7 +4,7 @@ import {
   X, Plus, Trash2, Save, RotateCcw, Volume2, 
   Settings, Image, Tag, Languages, Palette, 
   Download, Upload, Eye, EyeOff, Check, Pencil,
-  GripVertical, ChevronLeft, ChevronRight, HelpCircle,
+  GripVertical, ChevronLeft, HelpCircle, ListFilter,
   Mic, Square, Play
 } from 'lucide-react';
 import { getAvailableVoices, stopSpeech, speakText, playCustomAudio } from '../utils/speech';
@@ -73,6 +73,7 @@ export function ParentModal({
   }, [activeTab]);
 
   const [manageCategoryFilter, setManageCategoryFilter] = useState<string>('all');
+  const [manageSortMethod, setManageSortMethod] = useState<'manual' | 'alphabetical' | 'most-used' | 'newest'>('manual');
   
   // Custom Card State
   const [englishLabel, setEnglishLabel] = useState('');
@@ -628,8 +629,20 @@ export function ParentModal({
     });
   };
 
-  // Group cards by category for ease of management
-  const getCardsByCategory = (catId: string) => cards.filter(c => c.category === catId);
+  // Group and sort cards by category for ease of management
+  const getCardsByCategory = (catId: string) => {
+    const items = cards.filter(c => c.category === catId);
+    if (manageSortMethod === 'alphabetical') {
+      return [...items].sort((a, b) => a.englishLabel.localeCompare(b.englishLabel));
+    }
+    if (manageSortMethod === 'most-used') {
+      return [...items].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+    }
+    if (manageSortMethod === 'newest') {
+      return [...items].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+    return items; // 'manual' mode
+  };
 
   // Backup configuration via JSON Export
   const handleExportData = () => {
@@ -1223,32 +1236,62 @@ export function ParentModal({
                 </div>
               </div>
 
-              {/* Category Filter Dropdown */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/50">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2.5 bg-amber-100 text-[#FF8B3D] rounded-xl shrink-0">
-                    <Tag className="w-5 h-5" />
+              {/* Filter & Sort Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Category Filter Dropdown */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/50">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2.5 bg-amber-100 text-[#FF8B3D] rounded-xl shrink-0">
+                      <Tag className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-black text-slate-850 justify-between">Filter Category</h5>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="text-xs font-black text-slate-850">Filter Cards Category</h5>
+
+                  <div className="relative w-full sm:w-64">
+                    <select
+                      id="manage-category-filter-dropdown"
+                      value={manageCategoryFilter}
+                      onChange={(e) => setManageCategoryFilter(e.target.value)}
+                      className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-slate-205 rounded-xl font-sans font-extrabold text-xs text-slate-700 shadow-xs focus:ring-2 focus:ring-amber-300 focus:outline-none transition-all cursor-pointer appearance-none"
+                      style={{ backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem', backgroundRepeat: 'no-repeat' }}
+                    >
+                      <option value="all">📂 View All Categories</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.emoji} {cat.englishName} ({cat.hindiName})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                <div className="relative w-full sm:w-72">
-                  <select
-                    id="manage-category-filter-dropdown"
-                    value={manageCategoryFilter}
-                    onChange={(e) => setManageCategoryFilter(e.target.value)}
-                    className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-slate-205 rounded-xl font-sans font-extrabold text-xs text-slate-700 shadow-xs focus:ring-2 focus:ring-amber-300 focus:outline-none transition-all cursor-pointer appearance-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem', backgroundRepeat: 'no-repeat' }}
-                  >
-                    <option value="all">📂 View All Categories</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.emoji} {cat.englishName} ({cat.hindiName})
-                      </option>
-                    ))}
-                  </select>
+                {/* Card Sorting Dropdown */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-200/50">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2.5 bg-blue-105 text-indigo-600 rounded-xl shrink-0">
+                      <ListFilter className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-black text-slate-850">Sort Vocabulary</h5>
+                    </div>
+                  </div>
+
+                  <div className="relative w-full sm:w-64">
+                    <select
+                      id="manage-sorting-dropdown"
+                      value={manageSortMethod}
+                      onChange={(e) => setManageSortMethod(e.target.value as any)}
+                      className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-slate-205 rounded-xl font-sans font-extrabold text-xs text-slate-700 shadow-xs focus:ring-2 focus:ring-blue-300 focus:outline-none transition-all cursor-pointer appearance-none"
+                      style={{ backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem', backgroundRepeat: 'no-repeat' }}
+                    >
+                      <option value="manual">📂 Custom / Manual Drag</option>
+                      <option value="alphabetical">🔤 Alphabetical (A-Z)</option>
+                      <option value="most-used">🔥 Most Used (Frequency)</option>
+                      <option value="newest">🆕 Newest Created</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1286,18 +1329,15 @@ export function ParentModal({
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
-                        {itemsInCat.map((card, idx) => {
-                          const isFirst = idx === 0;
-                          const isLast = idx === itemsInCat.length - 1;
-                          
+                        {itemsInCat.map((card) => {
                           return (
                             <div 
                               key={card.id} 
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, card.id, cat.id)}
-                              onDragOver={(e) => handleDragOver(e, card.id, cat.id)}
+                              draggable={manageSortMethod === 'manual'}
+                              onDragStart={(e) => manageSortMethod === 'manual' && handleDragStart(e, card.id, cat.id)}
+                              onDragOver={(e) => manageSortMethod === 'manual' && handleDragOver(e, card.id, cat.id)}
                               onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDrop(e, card.id, cat.id)}
+                              onDrop={(e) => manageSortMethod === 'manual' && handleDrop(e, card.id, cat.id)}
                               onDragEnd={handleDragEnd}
                               style={{ backgroundColor: card.color || '#fff' }}
                               className={`p-3 rounded-xl border transition-all flex items-center justify-between group/card ${
@@ -1310,12 +1350,14 @@ export function ParentModal({
                             >
                               <div className="flex items-center gap-1.5 overflow-hidden">
                                 {/* Grip Handle for Drag and Drop */}
-                                <div 
-                                  className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors shrink-0 p-0.5 select-none"
-                                  title="Hold and drag to reorder cards within this category based on frequency!"
-                                >
-                                  <GripVertical className="w-4 h-4" />
-                                </div>
+                                {manageSortMethod === 'manual' && (
+                                  <div 
+                                    className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors shrink-0 p-0.5 select-none"
+                                    title="Hold and drag to reorder cards within this category!"
+                                  >
+                                    <GripVertical className="w-4 h-4" />
+                                  </div>
+                                )}
 
                                 <span className="text-2xl leading-none origin-center shrink-0">
                                   {card.image ? (
@@ -1331,36 +1373,6 @@ export function ParentModal({
                               </div>
 
                               <div className="flex items-center gap-1 shrink-0">
-                                {/* Move Backwards Button */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveCard(card.id, 'earlier')}
-                                  disabled={isFirst}
-                                  className={`p-1 rounded-md border transition-all ${
-                                    isFirst 
-                                      ? 'text-slate-300 border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed' 
-                                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer'
-                                  }`}
-                                  title="Move earlier (higher priority)"
-                                >
-                                  <ChevronLeft className="w-3.5 h-3.5" />
-                                </button>
-
-                                {/* Move Forwards Button */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveCard(card.id, 'later')}
-                                  disabled={isLast}
-                                  className={`p-1 rounded-md border transition-all ${
-                                    isLast 
-                                      ? 'text-slate-300 border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed' 
-                                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer'
-                                  }`}
-                                  title="Move later (lower priority)"
-                                >
-                                  <ChevronRight className="w-3.5 h-3.5" />
-                                </button>
-
                                 {/* Toggle visible */}
                                 <button
                                   type="button"

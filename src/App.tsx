@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AACCard, LanguageMode, VoiceSettings, Category } from './types';
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from './defaultCards';
 import { CategoryTabs } from './components/CategoryTabs';
@@ -60,6 +61,18 @@ export default function App() {
   const [parentMode, setParentMode] = useState(false);
   const [isLockOpen, setIsLockOpen] = useState(false);
   const [isParentModalOpen, setIsParentModalOpen] = useState(false);
+
+  // Zoom Focus Overlay Card State
+  const [activeZoomCard, setActiveZoomCard] = useState<AACCard | null>(null);
+
+  useEffect(() => {
+    if (activeZoomCard) {
+      const timer = setTimeout(() => {
+        setActiveZoomCard(null);
+      }, 1600); // Gentle 1.6-sec display time corresponding to vocal pacing
+      return () => clearTimeout(timer);
+    }
+  }, [activeZoomCard]);
   
   // Speech Voice Config
   const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>({
@@ -211,11 +224,24 @@ export default function App() {
       triggerHapticFeedback(voiceSettings.hapticPattern || 'normal');
     }
 
+    // Increment usage/clicks
+    setCards((prevCards) => {
+      const updated = prevCards.map((c) => {
+        if (c.id === card.id) {
+          return { ...c, usageCount: (c.usageCount || 0) + 1 };
+        }
+        return c;
+      });
+      localStorage.setItem('aac_cards_list', JSON.stringify(updated));
+      return updated;
+    });
+
     if (parentMode) {
       // In parent mode, speak the card or toggle. Let's make it speak so parents can check translations!
     } else {
       // Add text symbol to sentence builder list
       setSentence((prev) => [...prev, card]);
+      setActiveZoomCard(card); // Zoom trigger for the exciting pop-out animation
     }
 
     // Perform speech action using our routing utility
@@ -550,6 +576,70 @@ export default function App() {
           onReorderCards={handleSaveCards}
         />
       )}
+
+      {/* 3. Tapped Card Visual Pop-Forward Zoom Overlay */}
+      <AnimatePresence>
+        {activeZoomCard && (
+          <motion.div
+            id="active-card-zoom-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setActiveZoomCard(null)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-100 flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.2, opacity: 0, rotate: -8 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.5, opacity: 0, rotate: 8 }}
+              transition={{ type: "spring", damping: 15, stiffness: 140 }}
+              style={{ backgroundColor: activeZoomCard.color || '#FEF08A' }}
+              className="w-full max-w-[340px] sm:max-w-md aspect-square md:max-w-lg rounded-[2.5rem] border-8 shadow-2xl p-6 md:p-10 flex flex-col items-center justify-center gap-6 border-b-12 select-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* FITZGERALD KEY top tag marker indicator */}
+              <div className="w-24 h-2 bg-black/5 rounded-full mb-1" />
+
+              <div className="flex-1 flex items-center justify-center w-full">
+                {activeZoomCard.image ? (
+                  <motion.img
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    src={activeZoomCard.image}
+                    alt={activeZoomCard.englishLabel}
+                    className="object-cover rounded-3xl w-40 h-40 md:w-56 md:h-56 border-4 border-white/60 shadow-xl"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <motion.span
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    className="text-8xl min-[390px]:text-9xl md:text-[11.5rem] leading-none select-none filter drop-shadow-xl"
+                  >
+                    {activeZoomCard.emoji || '🎈'}
+                  </motion.span>
+                )}
+              </div>
+
+              {/* Combined Bilingual Text Labels */}
+              <div className="text-center space-y-2 pb-2">
+                {languageMode !== 'hindi' && (
+                  <h2 className="font-sans font-black text-slate-950 text-2xl min-[390px]:text-3xl sm:text-4xl md:text-5xl tracking-tight leading-none uppercase">
+                    {activeZoomCard.englishLabel}
+                  </h2>
+                )}
+                {languageMode !== 'english' && (
+                  <h2 className="font-hindi font-black text-slate-950 text-2.5xl min-[390px]:text-3.5xl sm:text-[40px] md:text-[46px] leading-tight block mt-1">
+                    {activeZoomCard.hindiLabel}
+                  </h2>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
