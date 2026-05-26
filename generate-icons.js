@@ -14,12 +14,30 @@ async function generate() {
   }
 
   try {
-    // Generate 180x180 Apple touch icon
+    // Generate 180x180 Apple touch icon with flat background mapping to prevent transparent corners from turning black on iOS
+    const iosBgColor = '#FEDECC'; // Fits the outer gradient layer edge flawlessly
+    
     await sharp(svgPath)
       .resize(180, 180)
+      .flatten({ background: iosBgColor })
       .png()
       .toFile(path.join(iconsDir, 'apple-touch-icon.png'));
-    console.log('✅ Created apple-touch-icon.png (180x180 for iPad and iPhone Home Screens)');
+    console.log('✅ Created public/icons/apple-touch-icon.png (180x180 flat background)');
+
+    // Overwrite the root fallback locations to satisfy lazy Safari path queries
+    await sharp(svgPath)
+      .resize(180, 180)
+      .flatten({ background: iosBgColor })
+      .png()
+      .toFile(path.resolve('public/apple-touch-icon.png'));
+    console.log('✅ Created public/apple-touch-icon.png (Root fallback)');
+
+    await sharp(svgPath)
+      .resize(180, 180)
+      .flatten({ background: iosBgColor })
+      .png()
+      .toFile(path.resolve('public/apple-touch-icon-precomposed.png'));
+    console.log('✅ Created public/apple-touch-icon-precomposed.png (Root precomposed fallback)');
 
     // Generate 192x192 manifest icon
     await sharp(svgPath)
