@@ -1,6 +1,6 @@
 {
-  "name": "Bilingual AAC Board - English & Hindi",
-  "short_name": "Bilingual AAC",
+  "name": "AAC Board - English & Hindi",
+  "short_name": "AAC Board",
   "description": "A bilingual AAC (Augmentative and Alternative Communication) board in English and Hindi for kids to speak daily words and construct sentences.",
   "categories": ["education", "medical", "utilities"],
   "start_url": "/",
