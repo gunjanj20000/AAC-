@@ -140,18 +140,18 @@ export function CardGrid({
 
             {/* Bilingual display labels with optimized size hierarchies */}
             <div className={`w-full text-center mt-1 shrink-0 flex flex-col justify-end ${
-              languageMode === 'both' ? 'min-h-[34px]' : 'min-h-[18px]'
+              languageMode === 'both' ? 'min-h-[44px]' : 'min-h-[22px]'
             }`}>
               {/* English label */}
               {languageMode !== 'hindi' && (
-                <span className="font-sans font-black text-slate-900 text-[12px] min-[390px]:text-[13px] sm:text-[14px] md:text-[16px] leading-none block tracking-tight truncate uppercase">
+                <span className="font-sans font-black text-slate-900 text-[15px] min-[390px]:text-[16px] sm:text-[18px] md:text-[21px] leading-none block tracking-tight truncate uppercase">
                   {card.englishLabel}
                 </span>
               )}
 
               {/* Hindi label */}
               {languageMode !== 'english' && (
-                <span className="font-hindi font-black text-slate-900 text-[11px] min-[390px]:text-[12px] sm:text-[13px] md:text-[15px] leading-none block mt-0.5 truncate">
+                <span className="font-hindi font-black text-slate-900 text-[14px] min-[390px]:text-[15px] sm:text-[17px] md:text-[19px] leading-none block mt-0.5 truncate">
                   {card.hindiLabel}
                 </span>
               )}
