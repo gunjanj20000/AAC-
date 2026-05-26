@@ -10,37 +10,38 @@ interface ChildLockModalProps {
 export function ChildLockModal({ isOpen, onClose, onSuccess }: ChildLockModalProps) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
-  const [mathSum] = useState(() => {
-    const num1 = Math.floor(Math.random() * 5) + 3; // 3 to 7
-    const num2 = Math.floor(Math.random() * 4) + 2; // 2 to 5
-    return { num1, num2, answer: num1 + num2 };
-  });
-  const [answer, setAnswer] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check standard PIN (1234) OR mathematical gate answer
-    const numAnswer = parseInt(answer.trim(), 10);
     const isPinCorrect = pin === '1234';
-    const isMathCorrect = numAnswer === mathSum.answer;
 
-    if (isPinCorrect || isMathCorrect) {
+    if (isPinCorrect) {
       setPin('');
-      setAnswer('');
       setError('');
       onSuccess();
     } else {
-      setError('Incorrect! PIN or answer is wrong. Hint: Default PIN is 1234.');
+      setError('Incorrect PIN! Hint: Default PIN is 1234.');
     }
   };
 
   const handleKeyPress = (num: string) => {
     setError('');
     if (pin.length < 4) {
-      setPin(prev => prev + num);
+      const nextPin = pin + num;
+      setPin(nextPin);
+      
+      if (nextPin.length === 4) {
+        if (nextPin === '1234') {
+          setPin('');
+          setError('');
+          onSuccess();
+        } else {
+          setError('Incorrect PIN! Hint: Default PIN is 1234.');
+        }
+      }
     }
   };
 
@@ -74,36 +75,11 @@ export function ChildLockModal({ isOpen, onClose, onSuccess }: ChildLockModalPro
         </div>
 
         <p className="text-xs font-sans text-slate-500 mb-5 leading-relaxed">
-          Autistic children can tap anywhere! Solve this simple puzzle or enter the password to enter settings.
+          Autistic children can tap anywhere! Enter the passcode to enter settings.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Option A: Math Gate */}
-          <div className="bg-[#FDFCF5] p-3.5 rounded-2xl border border-amber-200/80">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">
-              Gate Challenge: Solve to Enter
-            </label>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-black text-slate-800 tracking-wider">
-                {mathSum.num1} + {mathSum.num2} =
-              </span>
-              <input
-                id="math-answer-input"
-                type="number"
-                placeholder="?"
-                value={answer}
-                onChange={(e) => {
-                  setError('');
-                  setAnswer(e.target.value);
-                }}
-                className="w-18 px-2 py-1.5 text-center text-lg font-black bg-white border border-amber-200 rounded-xl focus:border-[#FF8B3D] focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="text-center text-slate-400 text-xs my-1 font-bold">― OR ENTER PASSWORD ―</div>
-
-          {/* Option B: PIN Lock Keyboard */}
+          {/* PIN Lock Keyboard */}
           <div className="flex flex-col items-center">
             {/* Dots */}
             <div className="flex gap-4 mb-4 justify-center">

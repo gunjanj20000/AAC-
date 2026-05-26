@@ -60,7 +60,18 @@ export function ParentModal({
   onDeleteCategory,
   onReorderCards,
 }: ParentModalProps) {
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'settings'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'settings'>(() => {
+    const cached = localStorage.getItem('aac_last_active_tab');
+    if (cached === 'create' || cached === 'manage' || cached === 'settings') {
+      return cached;
+    }
+    return 'create';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('aac_last_active_tab', activeTab);
+  }, [activeTab]);
+
   const [manageCategoryFilter, setManageCategoryFilter] = useState<string>('all');
   
   // Custom Card State
@@ -672,7 +683,6 @@ export function ParentModal({
             <span className="text-3xl">🛠️</span>
             <div>
               <h2 className="text-xl md:text-2xl font-black font-sans text-slate-800">AAC Settings & Customization</h2>
-              <p className="text-xs text-slate-500 font-sans mt-0.5">Customize vocabulary picture cards, categories, speech speeds, and offline sync.</p>
             </div>
           </div>
           <button 
@@ -1175,8 +1185,7 @@ export function ParentModal({
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-50 p-4 rounded-2xl border gap-4">
                 <div className="space-y-0.5">
-                  <h4 className="text-sm font-bold text-slate-750">Vocabulary Backup</h4>
-                  <p className="text-xs text-slate-500">Backup your custom speech boards to sync on another computer or clean store.</p>
+                  <h4 className="text-sm font-bold text-slate-755 font-sans">Vocabulary Backup</h4>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
@@ -1222,7 +1231,6 @@ export function ParentModal({
                   </div>
                   <div>
                     <h5 className="text-xs font-black text-slate-850">Filter Cards Category</h5>
-                    <p className="text-[10.5px] text-slate-500 font-medium">Select a category below to easily view and edit its voice cards</p>
                   </div>
                 </div>
 
@@ -1241,21 +1249,6 @@ export function ParentModal({
                       </option>
                     ))}
                   </select>
-                </div>
-              </div>
-
-              {/* Routine Frequency & Ordering Tip */}
-              <div className="bg-gradient-to-r from-amber-500/10 to-[#FF8B3D]/10 border border-amber-200/40 rounded-2xl p-4 flex gap-3 items-start shadow-sm">
-                <div className="p-2.5 bg-amber-400 text-white rounded-xl shrink-0 flex items-center justify-center">
-                  <span className="text-base leading-none">✨</span>
-                </div>
-                <div className="space-y-1">
-                  <h5 className="text-xs font-black text-slate-800 uppercase tracking-wider">Routine Priority Reordering</h5>
-                  <p className="text-[11px] font-sans text-slate-600 leading-relaxed font-semibold">
-                    Arrange the board cards based on your child's daily routine frequency! 
-                    Hover and <strong className="text-[#FF8B3D]">drag elements</strong> using the grid handle (<span className="inline-block align-middle font-sans text-xs font-bold font-mono">⁝⁝</span>) to change their display priority. 
-                    Or use the <span className="text-slate-800 font-black font-sans bg-white px-1.5 py-0.5 rounded border border-slate-200">◀ / ▶</span> buttons to move cards left or right. Put high-frequency, daily cards at the beginning of each category!
-                  </p>
                 </div>
               </div>
 
@@ -1420,16 +1413,6 @@ export function ParentModal({
           {/* TAB 3: VOICE & TEXT TO SPEECH (TTS) */}
           {activeTab === 'settings' && (
             <div className="space-y-6 max-w-2xl">
-              <div className="bg-sky-50 border border-sky-100 rounded-2xl p-4">
-                <h4 className="text-sm font-bold text-sky-900 flex items-center gap-2">
-                  <Volume2 className="w-5 h-5 text-sky-600" />
-                  <span>Speech Synthesizer Configuration</span>
-                </h4>
-                <p className="text-xs text-sky-700 font-sans mt-1">
-                  Adjust Speech settings below. Slower speech (e.g. 0.7x - 0.9x) is typically much easier for nonverbal and neurodivergent children to listen to, process, and absorb!
-                </p>
-              </div>
-
               {/* English Accent */}
               <div className="space-y-1">
                 <label className="block text-sm font-bold text-slate-700">English Speech Engine Accent</label>
@@ -1557,105 +1540,43 @@ export function ParentModal({
                 </div>
               </div>
 
-              {/* Tactile Preference & Haptic Feedback */}
-              <div className="bg-emerald-50/45 border border-emerald-100 rounded-2xl p-5 space-y-4">
+              {/* Tactile Preference & Haptic Feedback - Simplified On/Off */}
+              <div className="bg-emerald-50/45 border border-emerald-100 rounded-2xl p-5">
                 <div className="flex items-center justify-between">
-                  <div className="space-y-0.5 max-w-[75%]">
-                    <h4 className="text-sm font-black text-slate-800 flex items-center gap-2">
-                      <span>📳</span>
-                      <span>Sensory Tactile Feedback (Haptics)</span>
-                    </h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      Triggers gentle hardware vibrations on mobile devices and tablet screens when picture symbols are tapped, providing confidence and physical confirmation for young learners with sensory processing preferences.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        id="haptic-toggle-switch"
-                        type="checkbox"
-                        checked={hapticEnabled}
-                        onChange={(e) => {
-                          const val = e.target.checked;
-                          setHapticEnabled(val);
-                          if (val) triggerHapticFeedback('normal');
-                        }}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
-                  </div>
+                  <h4 className="text-sm font-black text-slate-850 flex items-center gap-2">
+                    <span>📳</span>
+                    <span>Sensory Tactile Feedback (Haptics)</span>
+                  </h4>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      id="haptic-toggle-switch"
+                      type="checkbox"
+                      checked={hapticEnabled}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setHapticEnabled(val);
+                        if (val) triggerHapticFeedback('normal');
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
                 </div>
-
-                {hapticEnabled && (
-                  <div className="space-y-3 pt-2 border-t border-emerald-100/60 transition-all">
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      Vibration Intensity & Pacing Patterns
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {[
-                        { key: 'soft', label: '🪶 Soft Tap', desc: 'Mild feather tickle' },
-                        { key: 'normal', label: '🖱️ Regular Click', desc: 'Standard hardware feedback' },
-                        { key: 'heavy', label: '🔨 Solid Press', desc: 'Firm physical knock' },
-                        { key: 'double', label: '✨ Double Sparkle', desc: 'Two quick magic taps' }
-                      ].map((item) => {
-                        const active = hapticPattern === item.key;
-                        return (
-                          <button
-                            key={item.key}
-                            type="button"
-                            onClick={() => {
-                              setHapticPattern(item.key as any);
-                              triggerHapticFeedback(item.key as any);
-                            }}
-                            className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between h-[68px] ${
-                              active
-                                ? 'bg-emerald-500 border-emerald-600 text-white shadow-sm'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                            }`}
-                          >
-                            <span className="text-xs font-black block leading-none">{item.label}</span>
-                            <span className={`text-[9px] block leading-tight mt-1 ${active ? 'text-emerald-100' : 'text-slate-400 font-semibold'}`}>{item.desc}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-amber-50/50 border border-amber-200/50 rounded-xl p-3.5 text-xs text-amber-850 flex gap-2 font-medium">
-                <span className="text-sm select-none">🔊</span>
-                <span>
-                  <strong>Loudness Tip:</strong> SpeechSynthesis volume is now forced to the absolute maximum browser level (<strong>100%</strong>). If sound is still not enough on this device, please make sure your iPad, computer, or phone's manual system volume button/keys are clicked/tapped up!
-                </span>
               </div>
 
               {/* PWA Update Card */}
               <div className="border-2 border-slate-100 rounded-2xl p-5 bg-slate-50 shadow-xs space-y-4">
-                <div className="flex items-center gap-2.5 border-b pb-2.5 border-slate-200/40">
-                  <span className="text-xl">📱</span>
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">Progressive Web App Updates</h4>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-0.5">Offline Ready System</p>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="space-y-1 sm:max-w-[70%]">
-                    <p className="text-[11.5px] font-sans text-slate-600 leading-relaxed font-semibold">
-                      Click below to check for service worker code changes, load fresh offline assets, and update custom boards to the latest codebase version. 
-                    </p>
-                    <p className="text-[10px] text-[#FF8B3D] font-bold uppercase tracking-wider flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-[#FF8B3D] inline-block"></span> Live Cache Check Active
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <span>📱</span>
+                    <span>Progressive Web App Updates</span>
+                  </h4>
                   
                   <button
                     type="button"
                     onClick={handleCheckForPWAUpdate}
                     disabled={checkingUpdate}
-                    className={`w-full sm:w-auto px-5 py-3 bg-indigo-600 text-white rounded-xl font-bold font-sans text-xs shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border-b-2 border-indigo-800 cursor-pointer ${
+                    className={`px-5 py-3 bg-indigo-600 text-white rounded-xl font-bold font-sans text-xs shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border-b-2 border-indigo-800 cursor-pointer ${
                       checkingUpdate ? 'opacity-50 cursor-not-allowed bg-indigo-400 animate-pulse' : 'hover:bg-indigo-700'
                     }`}
                   >
