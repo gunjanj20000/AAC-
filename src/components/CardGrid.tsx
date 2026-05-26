@@ -123,16 +123,16 @@ export function CardGrid({
             )}
 
             {/* Custom Picture or Emoji */}
-            <div className="flex-1 w-full h-full min-h-0 flex items-center justify-center relative mt-4 mb-0.5 overflow-hidden">
+            <div className="flex-1 w-full h-full min-h-0 flex items-center justify-center relative mt-3 mb-1 overflow-hidden">
               {card.image ? (
                 <img
                   src={card.image}
                   alt={card.englishLabel}
-                  className="object-cover rounded-xl w-[90%] h-[90%] pointer-events-none select-none border border-slate-200/40 shadow-sm group-hover:scale-105 transition-transform duration-150 animate-fade-in"
+                  className="object-cover rounded-xl w-[94%] h-[94%] pointer-events-none select-none border border-slate-200/40 shadow-sm group-hover:scale-105 transition-transform duration-150 animate-fade-in"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <span className="text-6.5xl min-[395px]:text-7.5xl sm:text-8.5xl md:text-9xl leading-none select-none transform group-hover:scale-110 transition-transform duration-150 filter drop-shadow-sm">
+                <span className="text-[58px] min-[395px]:text-[70px] sm:text-[84px] md:text-[100px] leading-none select-none transform group-hover:scale-110 transition-transform duration-150 filter drop-shadow-md">
                   {card.emoji || '🎈'}
                 </span>
               )}
