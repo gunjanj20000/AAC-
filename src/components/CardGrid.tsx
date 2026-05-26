@@ -76,7 +76,7 @@ export function CardGrid({
                 onCardTap(card);
               }
             }}
-            className={`relative group flex flex-col items-center justify-between p-3 px-3.5 pb-2.5 rounded-2xl border-2 card-shadow cursor-pointer select-none transition-all duration-100 ${
+            className={`relative group flex flex-col items-center justify-between p-2 pb-2.5 rounded-2xl border-2 card-shadow aspect-square cursor-pointer select-none transition-all duration-100 ${
               isCurrentlyHidden ? 'opacity-50 grayscale border-dashed' : ''
             }`}
             style={{ 
@@ -92,12 +92,12 @@ export function CardGrid({
             {/* Hidden state / Custom card badge */}
             <div className="absolute top-2.5 left-2.5 flex gap-1 items-center z-10">
               {card.isCustom && (
-                <span className="bg-[#FF8B3D]/95 text-white font-bold text-[8.5px] px-1.5 py-0.5 rounded-md select-none border border-white/20 shadow-xs">
+                <span className="bg-[#FF8B3D]/95 text-white font-bold text-[8px] px-1 py-0.5 rounded shadow-xs select-none">
                   Custom
                 </span>
               )}
               {isCurrentlyHidden && (
-                <span className="bg-slate-700/90 text-white font-bold text-[8.5px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                <span className="bg-slate-700/90 text-white font-bold text-[8px] px-1 py-0.5 rounded flex items-center gap-0.5 select-none">
                   <EyeOff className="w-2.5 h-2.5" /> Hidden
                 </span>
               )}
@@ -115,7 +115,7 @@ export function CardGrid({
                 title={isCurrentlyHidden ? 'Show card' : 'Hide card'}
               >
                 {isCurrentlyHidden ? (
-                  <span className="text-[10px] px-1 font-sans font-bold">Show</span>
+                  <span className="text-[9px] px-1 font-sans font-bold">Show</span>
                 ) : (
                   <EyeOff className="w-3.5 h-3.5" />
                 )}
@@ -123,35 +123,35 @@ export function CardGrid({
             )}
 
             {/* Custom Picture or Emoji */}
-            <div className="flex-1 flex items-center justify-center my-3 h-22 min-h-[88px] w-full">
+            <div className="flex-1 w-full h-full min-h-0 flex items-center justify-center relative mt-4 mb-0.5 overflow-hidden">
               {card.image ? (
                 <img
                   src={card.image}
                   alt={card.englishLabel}
-                  className="object-cover rounded-2xl w-22 h-22 pointer-events-none select-none border border-slate-200/40 shadow-sm group-hover:scale-110 transition-transform duration-150 animate-fade-in"
+                  className="object-cover rounded-xl w-[90%] h-[90%] pointer-events-none select-none border border-slate-200/40 shadow-sm group-hover:scale-105 transition-transform duration-150 animate-fade-in"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <span className="text-5.5xl md:text-6.5xl leading-none select-none transform group-hover:scale-115 transition-transform duration-150 filter drop-shadow-sm">
+                <span className="text-6.5xl min-[395px]:text-7.5xl sm:text-8.5xl md:text-9xl leading-none select-none transform group-hover:scale-110 transition-transform duration-150 filter drop-shadow-sm">
                   {card.emoji || '🎈'}
                 </span>
               )}
             </div>
 
             {/* Bilingual display labels with optimized size hierarchies */}
-            <div className={`w-full text-center mt-1 flex flex-col justify-end ${
-              languageMode === 'both' ? 'min-h-[48px]' : 'min-h-[26px]'
+            <div className={`w-full text-center mt-1 shrink-0 flex flex-col justify-end ${
+              languageMode === 'both' ? 'min-h-[34px]' : 'min-h-[18px]'
             }`}>
               {/* English label */}
               {languageMode !== 'hindi' && (
-                <span className="font-sans font-extrabold text-slate-900 text-[14px] min-[390px]:text-base sm:text-lg md:text-xl leading-tight block tracking-tight">
+                <span className="font-sans font-black text-slate-900 text-[12px] min-[390px]:text-[13px] sm:text-[14px] md:text-[16px] leading-none block tracking-tight truncate uppercase">
                   {card.englishLabel}
                 </span>
               )}
 
               {/* Hindi label */}
               {languageMode !== 'english' && (
-                <span className="font-hindi font-black text-slate-900 text-[13px] min-[390px]:text-[15px] sm:text-[17px] md:text-[19px] leading-tight block mt-0.5">
+                <span className="font-hindi font-black text-slate-900 text-[11px] min-[390px]:text-[12px] sm:text-[13px] md:text-[15px] leading-none block mt-0.5 truncate">
                   {card.hindiLabel}
                 </span>
               )}
