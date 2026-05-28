@@ -49,13 +49,24 @@ const speakSingleCard = async (card: AACCard, mode: LanguageMode, settings: Voic
   }
 };
 
+const FAVORITES_CATEGORY: Category = {
+  id: 'favorites',
+  englishName: 'Favorites',
+  hindiName: 'पसंदीदा',
+  color: 'favorites',
+  emoji: '⭐'
+};
+
 export default function App() {
   // --- STATE ---
   const [cards, setCards] = useState<AACCard[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [activeCategory, setActiveCategory] = useState('quick');
+  const [activeCategory, setActiveCategory] = useState('favorites');
   const [languageMode, setLanguageMode] = useState<LanguageMode>('hindi');
   const [sentence, setSentence] = useState<AACCard[]>([]);
+  
+  // Favorite state of pinned card IDs
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   
   // Modals & Parent Mode
   const [parentMode, setParentMode] = useState(false);
@@ -180,6 +191,22 @@ export default function App() {
       setLanguageMode('hindi');
     }
 
+    // 4. Initialise Favorites
+    const cachedFavs = localStorage.getItem('aac_favorite_ids');
+    if (cachedFavs) {
+      try {
+        setFavoriteIds(JSON.parse(cachedFavs));
+      } catch {
+        const defaultFavs = ['v-eat', 'v-drink', 'v-play', 'v-sleep', 'q-help', 'v-toilet'];
+        setFavoriteIds(defaultFavs);
+        localStorage.setItem('aac_favorite_ids', JSON.stringify(defaultFavs));
+      }
+    } else {
+      const defaultFavs = ['v-eat', 'v-drink', 'v-play', 'v-sleep', 'q-help', 'v-toilet'];
+      setFavoriteIds(defaultFavs);
+      localStorage.setItem('aac_favorite_ids', JSON.stringify(defaultFavs));
+    }
+
     // Calcular greeting
     const hour = new Date().getHours();
     if (hour < 12) {
@@ -192,6 +219,15 @@ export default function App() {
   }, []);
 
   // --- ACTIONS & HANDLERS ---
+  const handleToggleFavorite = useCallback((id: string) => {
+    setFavoriteIds((prev) => {
+      const updated = prev.includes(id) ? prev.filter((fId) => fId !== id) : [...prev, id];
+      localStorage.setItem('aac_favorite_ids', JSON.stringify(updated));
+      return updated;
+    });
+    playTapBubbleSound();
+  }, []);
+
   const handleSaveCards = (updatedCards: AACCard[]) => {
     setCards(updatedCards);
     localStorage.setItem('aac_cards_list', JSON.stringify(updatedCards));
@@ -368,14 +404,25 @@ export default function App() {
       setSentence([]);
       setLanguageMode('hindi');
       localStorage.setItem('aac_language_mode', 'hindi');
+      setActiveCategory('favorites');
       
       const resetVoice: VoiceSettings = { englishVoiceName: '', hindiVoiceName: '', speed: 0.8, pitch: 1.15, volume: 1.0, hapticEnabled: true, hapticPattern: 'normal' };
       setVoiceSettings(resetVoice);
       localStorage.setItem('aac_voice_settings', JSON.stringify(resetVoice));
 
+      // Reset favorites too
+      const defaultFavs = ['v-eat', 'v-drink', 'v-play', 'v-sleep', 'q-help', 'v-toilet'];
+      setFavoriteIds(defaultFavs);
+      localStorage.setItem('aac_favorite_ids', JSON.stringify(defaultFavs));
+
       playChimeSuccessSound();
     }
   };
+
+  // Get all AAC cards that are favorited, preserving the order of favoriteIds
+  const favoriteCards = favoriteIds
+    .map(favId => cards.find(card => card.id === favId))
+    .filter((card): card is AACCard => !!card);
 
   return (
     <div id="aac-app-root" className="min-h-screen flex flex-col bg-[#FDFCF5] relative pb-10 select-none">
@@ -506,7 +553,7 @@ export default function App() {
         {/* --- CATEGORY CAROUSEL TABS --- */}
         <div className="mt-4 bg-transparent shrink-0">
           <CategoryTabs
-            categories={categories}
+            categories={[FAVORITES_CATEGORY, ...categories]}
             activeCategoryId={activeCategory}
             onSelectCategory={(id) => {
               setActiveCategory(id);
@@ -519,11 +566,18 @@ export default function App() {
         {/* --- MAIN INTERACTIVE CARD GRID --- */}
         <div className="flex-1 mt-2">
           <CardGrid
-            cards={cards.filter((card) => card.category === activeCategory)}
+            cards={
+              activeCategory === 'favorites'
+                ? favoriteCards
+                : cards.filter((card) => card.category === activeCategory)
+            }
             onCardTap={handleCardTap}
             languageMode={languageMode}
             parentMode={parentMode}
             onToggleVisibility={handleToggleCardVisibility}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleToggleFavorite}
+            activeCategoryId={activeCategory}
           />
         </div>
 

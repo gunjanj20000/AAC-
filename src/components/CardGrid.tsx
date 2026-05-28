@@ -1,5 +1,5 @@
 import { AACCard, LanguageMode } from '../types';
-import { Sparkles, EyeOff } from 'lucide-react';
+import { Sparkles, EyeOff, Star } from 'lucide-react';
 
 function adjustColorBrightness(hex: string, percent: number): string {
   try {
@@ -29,6 +29,9 @@ interface CardGridProps {
   languageMode: LanguageMode;
   parentMode: boolean;
   onToggleVisibility?: (id: string) => void;
+  favoriteIds?: string[];
+  onToggleFavorite?: (id: string) => void;
+  activeCategoryId?: string;
 }
 
 export function CardGrid({
@@ -37,17 +40,41 @@ export function CardGrid({
   languageMode,
   parentMode,
   onToggleVisibility,
+  favoriteIds = [],
+  onToggleFavorite,
+  activeCategoryId,
 }: CardGridProps) {
   // If no cards are visible or present
   const availableCards = parentMode ? cards : cards.filter(c => c.isVisible);
 
   if (availableCards.length === 0) {
+    const isFavTab = activeCategoryId === 'favorites';
     return (
-      <div id="empty-grid-indicator" className="flex flex-col items-center justify-center p-12 text-center select-none bg-amber-50/20 rounded-3xl border-4 border-dashed border-[#FFDE59] m-4">
-        <Sparkles className="w-10 h-10 text-amber-400 mb-3 animate-spin duration-3000" />
-        <h4 className="text-lg font-bold font-sans text-slate-700">No cards here</h4>
-        <p className="text-sm font-sans text-slate-400 mt-1">
-          {parentMode ? 'Add some cards or unhide existing cards.' : 'Ask mama or papa to add cards here!'}
+      <div 
+        id="empty-grid-indicator" 
+        className={`flex flex-col items-center justify-center p-12 text-center select-none rounded-3xl border-4 border-dashed m-4 ${
+          isFavTab 
+            ? 'bg-rose-50/20 border-rose-200/60' 
+            : 'bg-amber-50/20 border-[#FFDE59]'
+        }`}
+      >
+        <Sparkles className={`w-10 h-10 ${isFavTab ? 'text-rose-400' : 'text-amber-400'} mb-3 animate-pulse`} />
+        <h4 className="text-lg font-black font-sans text-slate-800">
+          {isFavTab 
+            ? (languageMode === 'hindi' ? 'पसंदीदा में कोई कार्ड नहीं है' : 'No favorites pinned yet')
+            : (languageMode === 'hindi' ? 'यहाँ कोई कार्ड नहीं है' : 'No cards here')
+          }
+        </h4>
+        <p className="text-sm font-sans font-bold text-slate-500 mt-2 max-w-md leading-relaxed">
+          {isFavTab 
+            ? (languageMode === 'hindi' 
+                ? 'नीचे अन्य श्रेणियों (जैसे बातचीत या काम) में से किसी भी कार्ड पर ⭐ तारा बटन दबाकर उसे यहाँ पिन करें!'
+                : 'Tap the star (⭐) button on any card in other categories to pin them here for fast access!')
+            : (parentMode 
+                ? (languageMode === 'hindi' ? 'नए कार्ड जोड़ें या मौजूदा कार्ड को अनहाइड करें।' : 'Add some cards or unhide existing cards.')
+                : (languageMode === 'hindi' ? 'मम्मी-पापा से यहाँ नए कार्ड जोड़ने के लिए कहें!' : 'Ask mama or papa to add cards here!')
+              )
+          }
         </p>
       </div>
     );
@@ -119,6 +146,25 @@ export function CardGrid({
                 ) : (
                   <EyeOff className="w-3.5 h-3.5" />
                 )}
+              </button>
+            )}
+
+            {/* Toggle Favorite Star Button */}
+            {onToggleFavorite && (
+              <button
+                id={`favorite-btn-${card.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(card.id);
+                }}
+                className={`absolute top-2.5 ${parentMode ? 'right-11' : 'right-2.5'} p-1.5 rounded-xl transition-all duration-100 z-20 hover:scale-110 active:scale-95 bg-white/85 hover:bg-white border border-slate-200/50 shadow-xs cursor-pointer`}
+                title={favoriteIds.includes(card.id) ? 'Remove Favorite / पसंदीदा से हटाएं' : 'Add Favorite / पसंदीदा में जोड़ें'}
+              >
+                <Star className={`w-3.5 h-3.5 transition-colors ${
+                  favoriteIds.includes(card.id) 
+                    ? 'text-amber-500 fill-amber-400' 
+                    : 'text-slate-400/80 fill-transparent hover:text-amber-500'
+                }`} />
               </button>
             )}
 

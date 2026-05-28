@@ -429,18 +429,18 @@ export function ParentModal({
   const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2097152) {
-        setFormError('Image is too large! Please choose an image smaller than 2MB.');
-        return;
-      }
+      setSuccessMsg('Processing and compressing image...');
       setFormError('');
       compressImage(file)
         .then((compressedBase64) => {
           setEditCustomImage(compressedBase64);
           setEditEmoji(''); // Clear default emoji if custom image uploaded
           setFormError('');
+          setSuccessMsg('Image processed and compressed successfully!');
+          setTimeout(() => setSuccessMsg(''), 2000);
         })
         .catch((err) => {
+          setSuccessMsg('');
           setFormError(err.message || 'Error uploading and compressing image.');
         });
     }
@@ -508,19 +508,18 @@ export function ParentModal({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2097152) {
-        setFormError('Image is too large! Please choose an image smaller than 2MB.');
-        return;
-      }
-
+      setSuccessMsg('Processing and compressing image...');
       setFormError('');
       compressImage(file)
         .then((compressedBase64) => {
           setCustomImage(compressedBase64);
           setSelectedEmoji(''); // Clear emoji if custom image is uploaded
           setFormError('');
+          setSuccessMsg('Image processed and compressed successfully!');
+          setTimeout(() => setSuccessMsg(''), 2000);
         })
         .catch((err) => {
+          setSuccessMsg('');
           setFormError(err.message || 'Error uploading and compressing image.');
         });
     }

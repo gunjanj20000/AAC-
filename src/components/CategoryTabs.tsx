@@ -18,6 +18,10 @@ export function CategoryTabs({
     
     // Nice Fitzgerald-aligned colors for standard + custom categories
     const colorPresets: Record<string, { active: string; inactive: string }> = {
+      favorites: {
+        active: 'bg-rose-500 text-white border-b-4 border-rose-600 shadow-md shadow-rose-200/60 scale-105',
+        inactive: 'bg-rose-50/90 hover:bg-rose-100/90 text-rose-700 border-rose-200/80 hover:border-rose-300'
+      },
       quick: {
         active: 'bg-pink-500 text-white border-b-4 border-pink-600 shadow-md shadow-pink-200/60 scale-105',
         inactive: 'bg-pink-50/90 hover:bg-pink-100/90 text-pink-700 border-pink-200/80 hover:border-pink-300'
