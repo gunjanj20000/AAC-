@@ -61,7 +61,7 @@ export default function App() {
   // --- STATE ---
   const [cards, setCards] = useState<AACCard[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [activeCategory, setActiveCategory] = useState('favorites');
+  const [activeCategory, setActiveCategory] = useState('quick');
   const [languageMode, setLanguageMode] = useState<LanguageMode>('hindi');
   const [sentence, setSentence] = useState<AACCard[]>([]);
   
@@ -404,7 +404,7 @@ export default function App() {
       setSentence([]);
       setLanguageMode('hindi');
       localStorage.setItem('aac_language_mode', 'hindi');
-      setActiveCategory('favorites');
+      setActiveCategory('quick');
       
       const resetVoice: VoiceSettings = { englishVoiceName: '', hindiVoiceName: '', speed: 0.8, pitch: 1.15, volume: 1.0, hapticEnabled: true, hapticPattern: 'normal' };
       setVoiceSettings(resetVoice);
@@ -418,6 +418,13 @@ export default function App() {
       playChimeSuccessSound();
     }
   };
+
+  // Redirect to first category if favorites tab is selected but has empty favorites
+  useEffect(() => {
+    if (favoriteIds.length === 0 && activeCategory === 'favorites') {
+      setActiveCategory('quick');
+    }
+  }, [favoriteIds.length, activeCategory]);
 
   // Get all AAC cards that are favorited, preserving the order of favoriteIds
   const favoriteCards = favoriteIds
@@ -553,7 +560,7 @@ export default function App() {
         {/* --- CATEGORY CAROUSEL TABS --- */}
         <div className="mt-4 bg-transparent shrink-0">
           <CategoryTabs
-            categories={[FAVORITES_CATEGORY, ...categories]}
+            categories={favoriteIds.length > 0 ? [FAVORITES_CATEGORY, ...categories] : categories}
             activeCategoryId={activeCategory}
             onSelectCategory={(id) => {
               setActiveCategory(id);
@@ -575,8 +582,6 @@ export default function App() {
             languageMode={languageMode}
             parentMode={parentMode}
             onToggleVisibility={handleToggleCardVisibility}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={handleToggleFavorite}
             activeCategoryId={activeCategory}
           />
         </div>
@@ -628,6 +633,8 @@ export default function App() {
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
           onReorderCards={handleSaveCards}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
 

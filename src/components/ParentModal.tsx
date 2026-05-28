@@ -5,7 +5,7 @@ import {
   Settings, Image, Tag, Languages, Palette, 
   Download, Upload, Eye, EyeOff, Check, Pencil,
   GripVertical, ChevronLeft, HelpCircle, ListFilter,
-  Mic, Square, Play
+  Mic, Square, Play, Star
 } from 'lucide-react';
 import { getAvailableVoices, stopSpeech, speakText, playCustomAudio } from '../utils/speech';
 import { triggerHapticFeedback } from '../utils/audioEffects';
@@ -24,6 +24,8 @@ interface ParentModalProps {
   onAddCategory?: (category: Omit<Category, 'id'>) => void;
   onDeleteCategory?: (id: string) => void;
   onReorderCards?: (reorderedCards: AACCard[]) => void;
+  favoriteIds?: string[];
+  onToggleFavorite?: (id: string) => void;
 }
 
 // Color palette options according to Fitzgerald Key categories & safe clear colors
@@ -59,6 +61,8 @@ export function ParentModal({
   onAddCategory,
   onDeleteCategory,
   onReorderCards,
+  favoriteIds = [],
+  onToggleFavorite,
 }: ParentModalProps) {
   const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'settings'>(() => {
     const cached = localStorage.getItem('aac_last_active_tab');
@@ -1372,6 +1376,20 @@ export function ParentModal({
                               </div>
 
                               <div className="flex items-center gap-1 shrink-0">
+                                {/* Toggle Favorite */}
+                                <button
+                                  type="button"
+                                  onClick={() => onToggleFavorite && onToggleFavorite(card.id)}
+                                  className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                    favoriteIds.includes(card.id) 
+                                      ? 'bg-amber-100 border-amber-300 hover:bg-amber-200 text-amber-600' 
+                                      : 'bg-slate-100 border-slate-200 hover:bg-slate-150 text-slate-400'
+                                  }`}
+                                  title={favoriteIds.includes(card.id) ? 'Remove Favorite / पसंदीदा से हटाएं' : 'Add Favorite / पसंदीदा में जोड़ें'}
+                                >
+                                  <Star className={`w-3.5 h-3.5 ${favoriteIds.includes(card.id) ? 'fill-amber-400 text-amber-500' : ''}`} />
+                                </button>
+
                                 {/* Toggle visible */}
                                 <button
                                   type="button"
